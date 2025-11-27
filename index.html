@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Torneio Escolar</title>
+    <title>Torneio Escolar - Por Período</title>
     
-    <!-- Carregando React e Tailwind via Internet (CDN) -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        /* Personalização da barra de rolagem */
         .custom-scrollbar::-webkit-scrollbar { height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        body { background-color: #f3f4f6; }
+        body { background-color: #f8fafc; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -26,50 +26,68 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- ÍCONES (SVG Inline para não depender de biblioteca externa) ---
-        const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
-        const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+        // --- ÍCONES ---
+        const IconSun = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>;
+        const IconMoon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>;
+        const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+        const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
         const IconShuffle = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l14.2-18"/><path d="M2 6h1.4c1.3 0 2.5.6 3.3 1.7l14.2 18"/><path d="M16.3 5.4l5.6 5.3"/></svg>;
         const IconSave = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
         const IconAward = () => <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-600"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
         const IconCalculator = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>;
 
-        // --- DADOS ---
-        const DATA_EM = [
-            { id: 'em1', name: '[1º FDA] RAFAELLA SIMON DIAS & MARIA ISABEL TURMINA WILLMS' },
-            { id: 'em2', name: '[1º EMB] FLAVIA GABRIELA MENDES FELIPES & ISABELLE TAUANY RATEIRO BARBOSA' },
-            { id: 'em3', name: '[1º EMC] CIBELY GOMES PIRES & ALEXANDRE VALADAO DA SILVA' },
-            { id: 'em4', name: '[1º EMB] LAVINIA VITORIA LOPEZ FERNANDEZ & GEOVANA ANTONYELI LOPEZ PEREIRA' },
-            { id: 'em5', name: '[3º EMC] MATHEUS ADRIAN SERVIN GIROLOMETO & ANDRE LUIZ MARQUES' },
-            { id: 'em6', name: '[1º EMC] LUKAS HENRIQUE LIMA MILANEZ & BERNARDO DA SILVA DOS SANTOS' },
-            { id: 'em7', name: '[2º EMC] DAVID EDUARDO NEVES DE OLIVEIRA & PEDRO EMANUEL DOS SANTOS REGO' },
-            { id: 'em8', name: '[2º EMD] AUANI GABRIELA ALVES BATISTA DE ALMEIDA & MARIA VITORIA FERNANDES DA COSTA' },
-            { id: 'em9', name: '[1º EMC] RUAN GABRIEL BARBOSA SANTOS & FELIPE INACIO' },
-            { id: 'em10', name: '[2º EMC] ANNIAH JULIA ALVES MARTINS & LUISA CAMILA ORLANDINI LEONARDO' }
-        ];
+        // --- DADOS REORGANIZADOS POR PERÍODO ---
+        // Regra Manhã: 8A, 8B, 9A, 9B + Todo Ensino Médio
+        // Regra Tarde: 6º, 7º + Outros 9º (C/D)
 
-        const DATA_EF = [
-            { id: 'ef1', name: '[6º B] GABRIEL DE OLIVEIRA BETTAZZA & MAYCON DAVID ALVES MORAIS DOS SANTOS' },
-            { id: 'ef2', name: '[6º B] IZADORA FRITZ DOS REIS & ISADORA CENTURIAO BRUM' },
-            { id: 'ef3', name: '[6º B] NICOLE STANISLAWSKI BRITO & LUANA SOARES TEIXEIRA' },
-            { id: 'ef4', name: '[7º B] EMANUELY CRISTINA NUNES & ANA LIVIA RANGEL DE SOUZA' },
-            { id: 'ef5', name: '[7º B] GABRIELE DE SOUZA CLARO DA COSTA & NICOLLY GERULINA LIMA FRANZONI PERPETUO' },
-            { id: 'ef6', name: '[7º B] RAFAELA ITO MARCANZONI & DANIELLY ANSELMO RODRIGUES' },
-            { id: 'ef7', name: '[7º B] JOSE ANTONIO MOREIRA SOUZA & RYAN DIAS CLARO DA COSTA' },
-            { id: 'ef8', name: '[6º A] EDUARDO DA SILVA BIFI & SARAH MANUELLA COELHO MACHADO' },
-            { id: 'ef9', name: '[9º B] FELIPE FALCI PACHECO & FRANCISCO ESTEVAN DE SOUSA' },
-            { id: 'ef10', name: '[6º A] SARAH PLACIDO FERREIRA & HELOIZA GABRIELLY ZUTTION FERREIRA' },
-            { id: 'ef11', name: '[7º B] LAURA MAYSA MAXIMO DA SILVA & FERNANDA CAROLINA ALVAREZ GONZALEZ' },
-            { id: 'ef12', name: '[6º C] AGHATA FERNANDA DA SILVA & LYVIA DA SILVA OLIVEIRA' },
-            { id: 'ef13', name: '[9º D] MIKAEL GONCALVES PEREIRA DA SILVA & LORENZO LOPEZ CANDIDO DA SILVA' },
-            { id: 'ef14', name: '[9º C] EVELLYN CHRISTINI PERETTO MOISES & REBECA VITORIA DE AZEVEDO ALONSO' },
-            { id: 'ef15', name: '[6º D] ARTHUR DIAS DO NASCIMENTO & VICTOR OTAVIO NASCIMENTO RIBEIRO' },
-            { id: 'ef16', name: '[6º A] VALENTINA MELLO & RAFAELA BEATRIZ BARAGATE PULEZA' },
-            { id: 'ef17', name: '[8º A] THALISON TELESTE & LARA ISABELLY DA ROSA GESSER' },
-            { id: 'ef18', name: '[6º C] ANTHONY GABRIEL LOPEZ PEREIRA & JOAO MIGUEL DOS SANTOS DOMINGUES' },
-            { id: 'ef19', name: '[6º C] NICOLAS RAMON SUTIL VARGAS & NICOLLAS LORENZO GOMES DOS SANTOS' },
-            { id: 'ef20', name: '[6º C] HELOISA VITORIA MESSIAS RIBEIRO & ISADORA GABRIELA DE OLIVEIRA DIAS' }
-        ];
+        const DATA = {
+            'MANHA_EM_M': [
+                { id: 'emm1', name: '[1º EMC] CIBELY GOMES PIRES & ALEXANDRE VALADAO DA SILVA' },
+                { id: 'emm2', name: '[3º EMC] MATHEUS ADRIAN SERVIN GIROLOMETO & ANDRE LUIZ MARQUES' },
+                { id: 'emm3', name: '[1º EMC] LUKAS HENRIQUE LIMA MILANEZ & BERNARDO DA SILVA DOS SANTOS' },
+                { id: 'emm4', name: '[2º EMC] DAVID EDUARDO NEVES DE OLIVEIRA & PEDRO EMANUEL DOS SANTOS REGO' },
+                { id: 'emm5', name: '[1º EMC] RUAN GABRIEL BARBOSA SANTOS & FELIPE INACIO' }
+            ],
+            'MANHA_EM_F': [
+                { id: 'emf1', name: '[1º FDA] RAFAELLA SIMON DIAS & MARIA ISABEL TURMINA WILLMS' },
+                { id: 'emf2', name: '[1º EMB] FLAVIA GABRIELA MENDES FELIPES & ISABELLE TAUANY RATEIRO BARBOSA' },
+                { id: 'emf3', name: '[1º EMB] LAVINIA VITORIA LOPEZ FERNANDEZ & GEOVANA ANTONYELI LOPEZ PEREIRA' },
+                { id: 'emf4', name: '[2º EMD] AUANI GABRIELA ALVES BATISTA DE ALMEIDA & MARIA VITORIA FERNANDES DA COSTA' },
+                { id: 'emf5', name: '[2º EMC] ANNIAH JULIA ALVES MARTINS & LUISA CAMILA ORLANDINI LEONARDO' }
+            ],
+            // Fundamental Manhã (8A, 8B, 9A, 9B)
+            'MANHA_EF_M': [
+                { id: 'efm4', name: '[9º B] FELIPE FALCI PACHECO & FRANCISCO ESTEVAN DE SOUSA' },
+                { id: 'efm7', name: '[8º A] THALISON TELESTE & LARA ISABELLY DA ROSA GESSER' }
+            ],
+            'MANHA_EF_F': [
+                // Nenhum inscrito encontrado com 8A, 8B, 9A ou 9B feminino na lista original
+            ],
+            
+            // Fundamental Tarde (Todo o resto)
+            'TARDE_EF_M': [
+                { id: 'efm1', name: '[6º B] GABRIEL DE OLIVEIRA BETTAZZA & MAYCON DAVID ALVES MORAIS DOS SANTOS' },
+                { id: 'efm2', name: '[7º B] JOSE ANTONIO MOREIRA SOUZA & RYAN DIAS CLARO DA COSTA' },
+                { id: 'efm3', name: '[6º A] EDUARDO DA SILVA BIFI & SARAH MANUELLA COELHO MACHADO' },
+                { id: 'efm5', name: '[9º D] MIKAEL GONCALVES PEREIRA DA SILVA & LORENZO LOPEZ CANDIDO DA SILVA' }, // 9D é tarde
+                { id: 'efm6', name: '[6º D] ARTHUR DIAS DO NASCIMENTO & VICTOR OTAVIO NASCIMENTO RIBEIRO' },
+                { id: 'efm8', name: '[6º C] ANTHONY GABRIEL LOPEZ PEREIRA & JOAO MIGUEL DOS SANTOS DOMINGUES' },
+                { id: 'efm9', name: '[6º C] NICOLAS RAMON SUTIL VARGAS & NICOLLAS LORENZO GOMES DOS SANTOS' }
+            ],
+            'TARDE_EF_F': [
+                { id: 'eff1', name: '[6º B] IZADORA FRITZ DOS REIS & ISADORA CENTURIAO BRUM' },
+                { id: 'eff2', name: '[6º B] NICOLE STANISLAWSKI BRITO & LUANA SOARES TEIXEIRA' },
+                { id: 'eff3', name: '[7º B] EMANUELY CRISTINA NUNES & ANA LIVIA RANGEL DE SOUZA' },
+                { id: 'eff4', name: '[7º B] GABRIELE DE SOUZA CLARO DA COSTA & NICOLLY GERULINA LIMA FRANZONI PERPETUO' },
+                { id: 'eff5', name: '[7º B] RAFAELA ITO MARCANZONI & DANIELLY ANSELMO RODRIGUES' },
+                { id: 'eff6', name: '[6º A] SARAH PLACIDO FERREIRA & HELOIZA GABRIELLY ZUTTION FERREIRA' },
+                { id: 'eff7', name: '[7º B] LAURA MAYSA MAXIMO DA SILVA & FERNANDA CAROLINA ALVAREZ GONZALEZ' },
+                { id: 'eff8', name: '[6º C] AGHATA FERNANDA DA SILVA & LYVIA DA SILVA OLIVEIRA' },
+                { id: 'eff9', name: '[9º C] EVELLYN CHRISTINI PERETTO MOISES & REBECA VITORIA DE AZEVEDO ALONSO' },
+                { id: 'eff10', name: '[6º A] VALENTINA MELLO & RAFAELA BEATRIZ BARAGATE PULEZA' },
+                { id: 'eff11', name: '[6º C] HELOISA VITORIA MESSIAS RIBEIRO & ISADORA GABRIELA DE OLIVEIRA DIAS' }
+            ]
+        };
 
         const shuffleArray = (array) => {
             const newArray = [...array];
@@ -80,14 +98,10 @@
             return newArray;
         };
 
-        // --- COMPONENTES ---
-
         const MatchCard = ({ match, onUpdateScore, onFinishMatch, matchIndex, roundName }) => {
             const [scores, setScores] = useState(match.scores || [{ a: '', b: '' }, { a: '', b: '' }, { a: '', b: '' }]);
             
-            useEffect(() => {
-                if(match.scores) setScores(match.scores);
-            }, [match.scores]);
+            useEffect(() => { if(match.scores) setScores(match.scores); }, [match.scores]);
 
             const handleScoreChange = (setIndex, team, value) => {
                 const newScores = [...scores];
@@ -111,28 +125,36 @@
             const { winsA, winsB } = calculateWinner();
             const isFinished = match.winner !== null;
             const canFinish = !isFinished && (winsA === 2 || winsB === 2);
+            
+            if (match.isBye) {
+                return (
+                    <div className="border-2 border-dashed border-gray-200 rounded-lg p-3 mb-4 bg-gray-50/50 opacity-60">
+                        <div className="text-xs font-bold text-gray-400 uppercase mb-1">{roundName}</div>
+                        <div className="text-sm font-semibold text-gray-600">{match.teamA.name}</div>
+                        <div className="text-xs text-indigo-500 italic mt-1 font-medium">Aguarda próxima fase</div>
+                    </div>
+                );
+            }
 
             return (
-                <div className={`border rounded-lg p-4 mb-4 shadow-sm ${isFinished ? 'bg-gray-50 border-green-200' : 'bg-white border-gray-200'}`}>
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-bold text-gray-500 uppercase">{roundName} - Jogo {matchIndex + 1}</span>
-                        {isFinished && <span className="text-xs font-bold text-green-600 flex items-center"><span className="mr-1"><IconCheck /></span> Finalizado</span>}
+                <div className={`border rounded-lg p-3 mb-4 shadow-sm transition-all duration-300 ${isFinished ? 'bg-green-50 border-green-200 ring-1 ring-green-100' : 'bg-white border-gray-200 hover:border-indigo-300'}`}>
+                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{roundName} • Jogo {matchIndex + 1}</span>
+                        {isFinished && <span className="text-[10px] font-bold text-green-600 flex items-center bg-green-100 px-2 py-0.5 rounded-full"><IconCheck /> Finalizado</span>}
                     </div>
 
                     <div className="flex flex-col gap-3">
                         {/* Time A */}
-                        <div className={`flex justify-between items-center ${match.winner === match.teamA?.id ? 'font-bold text-green-700' : ''}`}>
-                            <div className="text-sm w-2/3 truncate" title={match.teamA?.name || 'Aguardando...'}>
-                                {match.teamA ? match.teamA.name : <span className="text-gray-400 italic">A definir</span>}
+                        <div className={`flex justify-between items-center gap-2 ${match.winner === match.teamA?.id ? 'text-green-800' : 'text-gray-700'}`}>
+                            <div className={`text-xs flex-1 break-words leading-tight pr-1 font-medium ${match.winner === match.teamA?.id ? 'font-bold' : ''}`} title={match.teamA?.name}>
+                                {match.teamA ? match.teamA.name : <span className="text-gray-400 italic font-normal">A definir</span>}
                             </div>
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 shrink-0">
                                 {[0, 1, 2].map(i => (
                                     <input 
-                                        key={`a-${i}`}
-                                        type="number" 
-                                        className="w-10 h-8 border text-center text-sm rounded disabled:bg-gray-100"
-                                        placeholder="0"
-                                        value={scores[i].a}
+                                        key={`a-${i}`} type="number" 
+                                        className={`w-7 h-7 border text-center text-xs rounded transition-colors focus:ring-2 focus:ring-indigo-200 outline-none ${match.winner === match.teamA?.id ? 'bg-green-100 border-green-300' : 'bg-white border-gray-200'}`}
+                                        placeholder="-" value={scores[i].a}
                                         onChange={(e) => handleScoreChange(i, 'a', e.target.value)}
                                         disabled={isFinished || !match.teamA || !match.teamB}
                                     />
@@ -141,18 +163,16 @@
                         </div>
 
                         {/* Time B */}
-                        <div className={`flex justify-between items-center ${match.winner === match.teamB?.id ? 'font-bold text-green-700' : ''}`}>
-                            <div className="text-sm w-2/3 truncate" title={match.teamB?.name || 'Aguardando...'}>
-                                {match.teamB ? match.teamB.name : <span className="text-gray-400 italic">A definir</span>}
+                        <div className={`flex justify-between items-center gap-2 ${match.winner === match.teamB?.id ? 'text-green-800' : 'text-gray-700'}`}>
+                            <div className={`text-xs flex-1 break-words leading-tight pr-1 font-medium ${match.winner === match.teamB?.id ? 'font-bold' : ''}`} title={match.teamB?.name}>
+                                {match.teamB ? match.teamB.name : <span className="text-gray-400 italic font-normal">A definir</span>}
                             </div>
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 shrink-0">
                                 {[0, 1, 2].map(i => (
                                     <input 
-                                        key={`b-${i}`}
-                                        type="number" 
-                                        className="w-10 h-8 border text-center text-sm rounded disabled:bg-gray-100"
-                                        placeholder="0"
-                                        value={scores[i].b}
+                                        key={`b-${i}`} type="number" 
+                                        className={`w-7 h-7 border text-center text-xs rounded transition-colors focus:ring-2 focus:ring-indigo-200 outline-none ${match.winner === match.teamB?.id ? 'bg-green-100 border-green-300' : 'bg-white border-gray-200'}`}
+                                        placeholder="-" value={scores[i].b}
                                         onChange={(e) => handleScoreChange(i, 'b', e.target.value)}
                                         disabled={isFinished || !match.teamA || !match.teamB}
                                     />
@@ -164,9 +184,9 @@
                     {!isFinished && canFinish && (
                         <button 
                             onClick={() => onFinishMatch(match, winsA > winsB ? match.teamA : match.teamB, scores)}
-                            className="mt-3 w-full py-2 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 transition-colors flex justify-center items-center gap-2"
+                            className="mt-3 w-full py-1.5 bg-indigo-600 text-white text-xs font-bold rounded shadow hover:bg-indigo-700 transition-colors flex justify-center items-center gap-2"
                         >
-                            <IconSave /> Confirmar Vencedor
+                            <IconSave /> Confirmar Resultado
                         </button>
                     )}
                 </div>
@@ -174,330 +194,379 @@
         };
 
         const BracketColumn = ({ title, matches, onUpdateScore, onFinishMatch }) => (
-            <div className="min-w-[350px] flex-1 bg-gray-50 p-4 rounded-xl h-full">
-                <h3 className="text-center font-bold text-gray-700 mb-4 sticky top-0 bg-gray-50 py-2 border-b">{title}</h3>
-                <div className="space-y-4">
+            <div className="min-w-[320px] flex-1 bg-white p-3 rounded-xl h-full border border-gray-200 shadow-sm flex flex-col">
+                <h3 className="text-center font-bold text-gray-700 mb-4 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg text-sm uppercase tracking-wide">{title}</h3>
+                <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-1">
                     {matches.map((match, idx) => (
                         <MatchCard 
-                            key={match.id} 
-                            match={match} 
-                            matchIndex={idx}
-                            roundName={title}
-                            onUpdateScore={onUpdateScore}
-                            onFinishMatch={onFinishMatch}
+                            key={match.id} match={match} matchIndex={idx} roundName={title}
+                            onUpdateScore={onUpdateScore} onFinishMatch={onFinishMatch}
                         />
                     ))}
-                    {matches.length === 0 && <p className="text-center text-gray-400 text-sm italic">Nenhum jogo nesta fase</p>}
+                    {matches.length === 0 && <p className="text-center text-gray-400 text-xs italic py-10">Nenhum jogo nesta fase</p>}
                 </div>
             </div>
         );
 
         function TournamentApp() {
-            const [activeTab, setActiveTab] = useState('EM');
-            const [brackets, setBrackets] = useState({ EM: [], EF: [] });
+            // States: Periodo -> Categoria (Se manhã) -> Genero
+            const [activePeriod, setActivePeriod] = useState('MANHA'); // MANHA, TARDE
+            const [activeCategory, setActiveCategory] = useState('EM'); // EM (Médio), EF (Fundamental). Só relevante para Manhã.
+            const [activeGender, setActiveGender] = useState('M'); // M, F
+            
+            const [brackets, setBrackets] = useState({});
             const [initialized, setInitialized] = useState(false);
 
-            // Tenta carregar do LocalStorage ao iniciar
+            // Determinar chave ativa
+            let activeKey = '';
+            if (activePeriod === 'TARDE') {
+                activeKey = `TARDE_EF_${activeGender}`;
+            } else {
+                // Manhã pode ser EM ou EF
+                activeKey = `MANHA_${activeCategory}_${activeGender}`;
+            }
+
             useEffect(() => {
-                const savedData = localStorage.getItem('torneio_dados');
+                const savedData = localStorage.getItem('torneio_dados_v3');
                 if (savedData) {
                     try {
-                        const parsed = JSON.parse(savedData);
-                        setBrackets(parsed);
+                        setBrackets(JSON.parse(savedData));
                         setInitialized(true);
-                    } catch (e) {
-                        console.error("Erro ao carregar dados salvos", e);
-                        initializeBrackets(false);
-                    }
+                    } catch(e) { initializeBrackets(false); }
                 } else {
                     initializeBrackets(false);
                 }
             }, []);
 
-            // Salva no LocalStorage sempre que mudar
             useEffect(() => {
-                if (initialized) {
-                    localStorage.setItem('torneio_dados', JSON.stringify(brackets));
-                }
+                if (initialized) localStorage.setItem('torneio_dados_v3', JSON.stringify(brackets));
             }, [brackets, initialized]);
 
-            const calculateBestLosers = (roundMatches, countNeeded) => {
-                const losers = roundMatches
-                    .filter(m => m.winner) 
-                    .map(m => {
-                        const loserId = m.winner === m.teamA.id ? m.teamB.id : m.teamA.id;
-                        const loserTeam = m.winner === m.teamA.id ? m.teamB : m.teamA;
-                        
-                        let setsWon = 0;
-                        let pointsWon = 0;
-                        let pointsLost = 0;
-                        
-                        m.scores.forEach(s => {
-                            const ptsA = parseInt(s.a) || 0;
-                            const ptsB = parseInt(s.b) || 0;
-                            pointsWon += (loserId === m.teamA.id) ? ptsA : ptsB;
-                            pointsLost += (loserId === m.teamA.id) ? ptsB : ptsA;
-                            
-                            if (loserId === m.teamA.id && ptsA > ptsB) setsWon++;
-                            if (loserId === m.teamB.id && ptsB > ptsA) setsWon++;
-                        });
+            const generateDynamicBracket = (teams, prefix) => {
+                const count = teams.length;
+                if (count === 0) return [];
 
-                        return {
-                            team: loserTeam,
-                            setsWon,
-                            pointDiff: pointsWon - pointsLost,
-                            pointsWon
-                        };
+                // Se tiver apenas 2 ou 3 times, fazemos final direta ou triangular
+                if (count <= 2) {
+                    return [{
+                        id: `${prefix}_final`, round: 'Final',
+                        teamA: teams[0], teamB: teams[1] || null,
+                        winner: null, scores: null
+                    }];
+                }
+
+                // Lógica Padrão (>3 times)
+                let targetSize = 4;
+                if (count > 4) targetSize = 8;
+                if (count > 8) targetSize = 16;
+
+                const pairs = Math.floor(count / 2);
+                const hasBye = count % 2 !== 0;
+                
+                const r1Matches = [];
+                for(let i=0; i<pairs; i++) {
+                    r1Matches.push({
+                        id: `${prefix}_r1_${i}`, round: '1ª Fase',
+                        teamA: teams[i*2], teamB: teams[i*2+1],
+                        winner: null, scores: null
                     });
+                }
+                
+                if (hasBye) {
+                    const byeTeam = teams[teams.length - 1];
+                    r1Matches.push({
+                        id: `${prefix}_r1_bye`, round: '1ª Fase',
+                        teamA: byeTeam, teamB: null,
+                        winner: byeTeam.id, scores: null, isBye: true
+                    });
+                }
 
-                losers.sort((a, b) => {
-                    if (b.setsWon !== a.setsWon) return b.setsWon - a.setsWon;
-                    if (b.pointDiff !== a.pointDiff) return b.pointDiff - a.pointDiff;
-                    return b.pointsWon - a.pointsWon;
-                });
+                const nextMatches = [];
+                const nextRoundName = targetSize === 4 ? 'Semifinal' : (targetSize === 8 ? 'Quartas' : 'Oitavas');
+                
+                for(let i=0; i<targetSize/2; i++) {
+                    nextMatches.push({
+                        id: `${prefix}_r2_${i}`, round: nextRoundName,
+                        teamA: null, teamB: null, winner: null, scores: null,
+                        sourceMatchA: null, sourceMatchB: null // Será preenchido pela repescagem
+                    });
+                }
 
-                return losers.slice(0, countNeeded).map(l => l.team);
+                const subsequentMatches = [];
+                if (targetSize >= 8) {
+                    for(let i=0; i<2; i++) {
+                        subsequentMatches.push({
+                            id: `${prefix}_semi_${i}`, round: 'Semifinal',
+                            teamA: null, teamB: null, winner: null, scores: null,
+                            sourceMatchA: `${prefix}_r2_${i*2}`, sourceMatchB: `${prefix}_r2_${i*2+1}`
+                        });
+                    }
+                }
+                
+                const finalMatch = [{
+                    id: `${prefix}_final`, round: 'Final',
+                    teamA: null, teamB: null, winner: null, scores: null,
+                    sourceMatchA: targetSize === 4 ? `${prefix}_r2_0` : `${prefix}_semi_0`,
+                    sourceMatchB: targetSize === 4 ? `${prefix}_r2_1` : `${prefix}_semi_1`
+                }];
+
+                return [...r1Matches, ...nextMatches, ...subsequentMatches, ...finalMatch];
             };
 
             const initializeBrackets = (randomize = true) => {
-                const teamsEM = randomize ? shuffleArray(DATA_EM) : [...DATA_EM];
+                const newBrackets = {};
+                // Gerar chaves para todas as combinacoes
+                const keys = ['MANHA_EM_M', 'MANHA_EM_F', 'MANHA_EF_M', 'MANHA_EF_F', 'TARDE_EF_M', 'TARDE_EF_F'];
                 
-                // EM
-                const r1EM = [];
-                for(let i=0; i<5; i++) {
-                    r1EM.push({ 
-                        id: `em_r1_${i}`, round: '1ª Fase', 
-                        teamA: teamsEM[i*2], teamB: teamsEM[i*2+1], 
-                        winner: null, nextMatchId: null, scores: null 
-                    });
-                }
-                const qEM = [
-                    { id: 'em_q_1', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'em_s_1', scores: null, sourceA: 'win_r1_0', sourceB: 'best_loser_0' },
-                    { id: 'em_q_2', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'em_s_1', scores: null, sourceA: 'win_r1_1', sourceB: 'best_loser_1' },
-                    { id: 'em_q_3', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'em_s_2', scores: null, sourceA: 'win_r1_2', sourceB: 'best_loser_2' },
-                    { id: 'em_q_4', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'em_s_2', scores: null, sourceA: 'win_r1_3', sourceB: 'win_r1_4' },
-                ];
-                const sEM = [
-                    { id: 'em_s_1', round: 'Semifinal', teamA: null, teamB: null, winner: null, nextMatchId: 'em_f_1', scores: null },
-                    { id: 'em_s_2', round: 'Semifinal', teamA: null, teamB: null, winner: null, nextMatchId: 'em_f_1', scores: null },
-                ];
-                const fEM = [{ id: 'em_f_1', round: 'Final', teamA: null, teamB: null, winner: null, nextMatchId: null, scores: null }];
-
-                // EF
-                const teamsEF = randomize ? shuffleArray(DATA_EF) : [...DATA_EF];
-                const r1EF = [];
-                for(let i=0; i<10; i++) {
-                    r1EF.push({ 
-                        id: `ef_r1_${i}`, round: '1ª Fase', 
-                        teamA: teamsEF[i*2], teamB: teamsEF[i*2+1], 
-                        winner: null, nextMatchId: null, scores: null 
-                    });
-                }
-                const oEF = [
-                    { id: 'ef_o_1', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_1', scores: null, sourceA: 'win_r1_0', sourceB: 'best_loser_0' },
-                    { id: 'ef_o_2', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_1', scores: null, sourceA: 'win_r1_1', sourceB: 'best_loser_1' },
-                    { id: 'ef_o_3', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_2', scores: null, sourceA: 'win_r1_2', sourceB: 'best_loser_2' },
-                    { id: 'ef_o_4', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_2', scores: null, sourceA: 'win_r1_3', sourceB: 'best_loser_3' },
-                    { id: 'ef_o_5', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_3', scores: null, sourceA: 'win_r1_4', sourceB: 'best_loser_4' },
-                    { id: 'ef_o_6', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_3', scores: null, sourceA: 'win_r1_5', sourceB: 'best_loser_5' },
-                    { id: 'ef_o_7', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_4', scores: null, sourceA: 'win_r1_6', sourceB: 'win_r1_7' },
-                    { id: 'ef_o_8', round: 'Oitavas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_q_4', scores: null, sourceA: 'win_r1_8', sourceB: 'win_r1_9' },
-                ];
-                const qEF = [
-                    { id: 'ef_q_1', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_s_1', scores: null },
-                    { id: 'ef_q_2', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_s_1', scores: null },
-                    { id: 'ef_q_3', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_s_2', scores: null },
-                    { id: 'ef_q_4', round: 'Quartas', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_s_2', scores: null },
-                ];
-                const sEF = [
-                    { id: 'ef_s_1', round: 'Semifinal', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_f_1', scores: null },
-                    { id: 'ef_s_2', round: 'Semifinal', teamA: null, teamB: null, winner: null, nextMatchId: 'ef_f_1', scores: null },
-                ];
-                const fEF = [{ id: 'ef_f_1', round: 'Final', teamA: null, teamB: null, winner: null, nextMatchId: null, scores: null }];
-
-                setBrackets({
-                    EM: [...r1EM, ...qEM, ...sEM, ...fEM],
-                    EF: [...r1EF, ...oEF, ...qEF, ...sEF, ...fEF]
+                keys.forEach(key => {
+                    const teams = randomize ? shuffleArray(DATA[key]) : [...DATA[key]];
+                    newBrackets[key] = generateDynamicBracket(teams, key);
                 });
+                
+                setBrackets(newBrackets);
                 setInitialized(true);
             };
 
             const handleUpdateScore = (matchId, newScores) => {
-                const category = activeTab;
-                const newBracket = brackets[category].map(m => {
-                    if (m.id === matchId) return { ...m, scores: newScores };
-                    return m;
-                });
-                setBrackets({ ...brackets, [category]: newBracket });
+                const currentBracket = [...brackets[activeKey]];
+                const index = currentBracket.findIndex(m => m.id === matchId);
+                currentBracket[index] = { ...currentBracket[index], scores: newScores };
+                setBrackets({ ...brackets, [activeKey]: currentBracket });
             };
 
             const handleFinishMatch = (match, winnerTeam, finalScores) => {
                 if (!window.confirm(`Confirmar vitória para: ${winnerTeam.name}?`)) return;
 
-                const category = activeTab;
-                const currentBracket = [...brackets[category]];
-                
+                const currentBracket = [...brackets[activeKey]];
                 const matchIndex = currentBracket.findIndex(m => m.id === match.id);
                 currentBracket[matchIndex] = { ...currentBracket[matchIndex], winner: winnerTeam.id, scores: finalScores };
 
-                if (match.nextMatchId) {
-                    const nextMatchIndex = currentBracket.findIndex(m => m.id === match.nextMatchId);
-                    if (nextMatchIndex !== -1) {
-                        let newNextMatch = { ...currentBracket[nextMatchIndex] };
-                        if (!newNextMatch.teamA) newNextMatch.teamA = winnerTeam;
-                        else if (!newNextMatch.teamB) newNextMatch.teamB = winnerTeam;
-                        currentBracket[nextMatchIndex] = newNextMatch;
-                    }
+                const nextMatch = currentBracket.find(m => m.sourceMatchA === match.id || m.sourceMatchB === match.id);
+                if (nextMatch) {
+                    const nextIndex = currentBracket.findIndex(m => m.id === nextMatch.id);
+                    const newNext = { ...currentBracket[nextIndex] };
+                    if (newNext.sourceMatchA === match.id) newNext.teamA = winnerTeam;
+                    else newNext.sourceMatchB === match.id ? newNext.teamB = winnerTeam : null;
+                    currentBracket[nextIndex] = newNext;
                 }
+
+                setBrackets({ ...brackets, [activeKey]: currentBracket });
+            };
+
+            const calculateBestLosers = (matches, count) => {
+                const losers = matches
+                    .filter(m => m.winner && !m.isBye)
+                    .map(m => {
+                        const loserTeam = m.winner === m.teamA.id ? m.teamB : m.teamA;
+                        const loserId = loserTeam.id;
+                        let setsWon = 0, ptDiff = 0, ptWon = 0;
+                        m.scores.forEach(s => {
+                            const pA = parseInt(s.a)||0, pB = parseInt(s.b)||0;
+                            const myPts = loserId === m.teamA.id ? pA : pB;
+                            const opPts = loserId === m.teamA.id ? pB : pA;
+                            ptWon += myPts;
+                            ptDiff += (myPts - opPts);
+                            if (myPts > opPts && myPts >= 15) setsWon++;
+                        });
+                        return { team: loserTeam, setsWon, ptDiff, ptWon };
+                    });
                 
-                setBrackets({ ...brackets, [category]: currentBracket });
+                losers.sort((a,b) => b.setsWon - a.setsWon || b.ptDiff - a.ptDiff || b.ptWon - a.ptWon);
+                return losers.slice(0, count).map(l => l.team);
             };
 
             const runRepechage = () => {
-                const category = activeTab;
-                const currentBracket = [...brackets[category]];
-                
+                const currentBracket = [...brackets[activeKey]];
                 const r1Matches = currentBracket.filter(m => m.round === '1ª Fase');
-                const allFinished = r1Matches.every(m => m.winner);
                 
-                if (!allFinished) {
-                    alert("Atenção: Finalize todos os jogos da 1ª Fase antes de gerar a repescagem.");
+                if (r1Matches.length === 0) return; // Final direta não tem repescagem
+                if (r1Matches.some(m => !m.winner)) {
+                    alert("Finalize todos os jogos da 1ª Fase primeiro.");
                     return;
                 }
 
                 const winners = r1Matches.map(m => m.winner === m.teamA.id ? m.teamA : m.teamB);
-                const countLosersNeeded = category === 'EM' ? 3 : 6;
-                const bestLosers = calculateBestLosers(r1Matches, countLosersNeeded);
+                const r2Matches = currentBracket.filter(m => m.round === 'Quartas' || m.round === 'Semifinal' || m.round === 'Oitavas');
+                const slotsTotal = r2Matches.length * 2;
+                const losersNeeded = slotsTotal - winners.length;
 
-                alert(`Repescagem calculada!\nClassificados: ${winners.length} Vencedores + ${bestLosers.length} Melhores Perdedores.`);
+                if (losersNeeded < 0) {
+                     // Caso raro onde tem menos slots que vencedores (não deve ocorrer com lógica atual)
+                     return;
+                }
 
-                const nextRoundName = category === 'EM' ? 'Quartas' : 'Oitavas';
+                const bestLosers = calculateBestLosers(r1Matches, losersNeeded);
+                const qualified = [...winners, ...bestLosers];
                 
-                currentBracket.forEach((match, idx) => {
-                    if (match.round === nextRoundName) {
-                        if (match.sourceA) {
-                            if (match.sourceA.startsWith('win_r1_')) {
-                                const index = parseInt(match.sourceA.split('_').pop());
-                                if (winners[index]) match.teamA = winners[index];
-                            } else if (match.sourceA.startsWith('best_loser_')) {
-                                const index = parseInt(match.sourceA.split('_').pop());
-                                if (bestLosers[index]) match.teamA = bestLosers[index];
-                            }
-                        }
-                        if (match.sourceB) {
-                            if (match.sourceB.startsWith('win_r1_')) {
-                                const index = parseInt(match.sourceB.split('_').pop());
-                                if (winners[index]) match.teamB = winners[index];
-                            } else if (match.sourceB.startsWith('best_loser_')) {
-                                const index = parseInt(match.sourceB.split('_').pop());
-                                if (bestLosers[index]) match.teamB = bestLosers[index];
-                            }
-                        }
+                alert(`Repescagem: ${bestLosers.length} perdedores avançaram.`);
+
+                let qIndex = 0;
+                currentBracket.forEach((m, idx) => {
+                    if ((m.round === 'Quartas' || m.round === 'Semifinal' || m.round === 'Oitavas') && !m.sourceMatchA) {
+                        const teamA = qualified[qIndex++];
+                        const teamB = qualified[qIndex++];
+                        currentBracket[idx] = { ...m, teamA, teamB };
                     }
                 });
 
-                setBrackets({ ...brackets, [category]: currentBracket });
+                setBrackets({ ...brackets, [activeKey]: currentBracket });
             };
 
-            const getMatchesByRound = (category) => {
-                const list = brackets[category] || [];
-                const groups = {};
-                list.forEach(m => {
-                    if (!groups[m.round]) groups[m.round] = [];
-                    groups[m.round].push(m);
-                });
-                return groups;
-            };
+            if (!initialized) return <div className="flex items-center justify-center min-h-screen text-gray-500">Preparando quadras...</div>;
 
-            const currentMatches = getMatchesByRound(activeTab);
-            const roundOrder = activeTab === 'EM' 
-                ? ['1ª Fase', 'Quartas', 'Semifinal', 'Final']
-                : ['1ª Fase', 'Oitavas', 'Quartas', 'Semifinal', 'Final'];
+            const currentBracket = brackets[activeKey] || [];
+            const matchesByRound = {};
+            currentBracket.forEach(m => {
+                if(!matchesByRound[m.round]) matchesByRound[m.round] = [];
+                matchesByRound[m.round].push(m);
+            });
 
-            const showRepechageBtn = currentMatches['1ª Fase']?.every(m => m.winner) && 
-                                    currentMatches[activeTab === 'EM' ? 'Quartas' : 'Oitavas']?.some(m => !m.teamA || !m.teamB);
+            const roundOrder = ['1ª Fase', 'Oitavas', 'Quartas', 'Semifinal', 'Final'];
+            
+            // Verifica se precisa de botão de repescagem
+            const r1 = matchesByRound['1ª Fase'] || [];
+            // O próximo round existe?
+            const nextRoundMatches = matchesByRound['Oitavas'] || matchesByRound['Quartas'] || matchesByRound['Semifinal'] || [];
+            // Precisa preencher e não tem link direto (sourceMatch)?
+            const needsFill = nextRoundMatches.length > 0 && !nextRoundMatches[0].sourceMatchA;
+            const showRepechage = r1.length > 0 && r1.every(m => m.winner) && needsFill && !nextRoundMatches[0].teamA;
 
-            const finalMatch = brackets[activeTab]?.find(m => m.round === 'Final');
+            const finalMatch = currentBracket.find(m => m.round === 'Final');
             const championName = finalMatch?.winner ? (finalMatch.teamA.id === finalMatch.winner ? finalMatch.teamA.name : finalMatch.teamB.name) : null;
 
-            if (!initialized) return <div className="p-10 text-center">Carregando torneio...</div>;
-
             return (
-                <div className="min-h-screen p-4 font-sans text-slate-800">
-                    <header className="bg-blue-700 text-white p-6 rounded-xl shadow-lg mb-6">
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2">
-                                    <IconTrophy /> Torneio Escolar
-                                </h1>
-                                <p className="opacity-90 mt-1">Gestão de Chaveamento - Repescagem Automática</p>
+                <div className="min-h-screen font-sans text-slate-800 pb-10">
+                    <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+                        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-yellow-50 rounded-lg"><IconTrophy /></div>
+                                <div>
+                                    <h1 className="text-xl font-bold text-slate-800 leading-none">Torneio Escolar</h1>
+                                    <p className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-wide">Gestão por Período</p>
+                                </div>
                             </div>
-                            <button 
-                                onClick={() => {
-                                    if(window.confirm("Reiniciar tudo e sortear novamente? Isso apaga o progresso salvo.")) {
-                                        initializeBrackets(true);
-                                    }
-                                }}
-                                className="bg-blue-800 hover:bg-blue-900 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors border border-blue-500"
-                            >
-                                <IconShuffle /> Sortear & Reiniciar
-                            </button>
+                            
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => { if(window.confirm("Reiniciar todo o torneio apaga os placares. Confirmar?")) initializeBrackets(true); }}
+                                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors"
+                                >
+                                    <IconShuffle /> Novo Sorteio
+                                </button>
+                            </div>
                         </div>
                     </header>
 
-                    <div className="flex gap-2 mb-6 bg-white p-2 rounded-lg shadow-sm w-fit mx-auto">
-                        <button 
-                            onClick={() => setActiveTab('EM')}
-                            className={`px-6 py-2 rounded-md font-bold transition-all ${activeTab === 'EM' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:bg-gray-100'}`}
-                        >
-                            Ensino Médio
-                        </button>
-                        <button 
-                            onClick={() => setActiveTab('EF')}
-                            className={`px-6 py-2 rounded-md font-bold transition-all ${activeTab === 'EF' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:bg-gray-100'}`}
-                        >
-                            Ensino Fundamental
-                        </button>
-                    </div>
-
-                    {showRepechageBtn && (
-                        <div className="mb-6 p-4 bg-orange-100 border border-orange-300 rounded-lg flex justify-between items-center animate-pulse">
-                            <div>
-                                <h3 className="font-bold text-orange-800">1ª Fase Concluída!</h3>
-                                <p className="text-sm text-orange-700">Clique para calcular os melhores perdedores.</p>
-                            </div>
-                            <button 
-                                onClick={runRepechage}
-                                className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded shadow flex items-center gap-2"
-                            >
-                                <IconCalculator /> Gerar Chaves Finais
-                            </button>
-                        </div>
-                    )}
-
-                    {championName && (
-                        <div className="mb-8 bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded shadow-sm flex items-center gap-4">
-                            <IconAward />
-                            <div>
-                                <h3 className="font-bold text-yellow-800 text-lg">Campeão Definido!</h3>
-                                <p className="text-yellow-900 text-xl font-bold">{championName}</p>
+                    <main className="max-w-7xl mx-auto px-4 pt-6">
+                        
+                        {/* SELETOR DE PERÍODO */}
+                        <div className="flex justify-center mb-6">
+                            <div className="bg-white p-1.5 rounded-xl shadow-sm border border-gray-200 inline-flex gap-1">
+                                <button 
+                                    onClick={() => setActivePeriod('MANHA')}
+                                    className={`px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${activePeriod === 'MANHA' ? 'bg-orange-100 text-orange-700 shadow-sm' : 'text-gray-400 hover:bg-gray-50'}`}
+                                >
+                                    <IconSun /> Manhã
+                                </button>
+                                <button 
+                                    onClick={() => { setActivePeriod('TARDE'); setActiveCategory('EF'); }} // Tarde só tem EF
+                                    className={`px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${activePeriod === 'TARDE' ? 'bg-indigo-100 text-indigo-700 shadow-sm' : 'text-gray-400 hover:bg-gray-50'}`}
+                                >
+                                    <IconMoon /> Tarde
+                                </button>
                             </div>
                         </div>
-                    )}
 
-                    <div className="flex gap-6 overflow-x-auto pb-8 custom-scrollbar">
-                        {roundOrder.map(round => (
-                            currentMatches[round] && currentMatches[round].length > 0 && (
-                                <BracketColumn 
-                                    key={round} 
-                                    title={round} 
-                                    matches={currentMatches[round]} 
-                                    onUpdateScore={handleUpdateScore}
-                                    onFinishMatch={handleFinishMatch}
-                                />
-                            )
-                        ))}
-                    </div>
+                        {/* SELETOR DE CATEGORIA (Apenas para Manhã) */}
+                        {activePeriod === 'MANHA' && (
+                            <div className="flex justify-center mb-6 animate-fade-in">
+                                <div className="inline-flex gap-4 border-b border-gray-200 pb-1">
+                                    <button 
+                                        onClick={() => setActiveCategory('EM')}
+                                        className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors ${activeCategory === 'EM' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        Ensino Médio (Todas)
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveCategory('EF')}
+                                        className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors ${activeCategory === 'EF' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        Fundamental (8º e 9º A/B)
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SELETOR DE GÊNERO */}
+                        <div className="flex justify-center mb-8">
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex divide-x">
+                                <button 
+                                    onClick={() => setActiveGender('M')}
+                                    className={`px-8 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${activeGender === 'M' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                >
+                                    Masculino
+                                </button>
+                                <button 
+                                    onClick={() => setActiveGender('F')}
+                                    className={`px-8 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${activeGender === 'F' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                >
+                                    Feminino
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* FEEDBACK DE ESTADO */}
+                        <div className="text-center mb-8">
+                            <span className="inline-block px-4 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-full shadow-lg">
+                                {activePeriod} • {activePeriod === 'MANHA' ? (activeCategory === 'EM' ? 'MÉDIO' : 'FUNDAMENTAL') : 'FUNDAMENTAL'} • {activeGender === 'M' ? 'MASCULINO' : 'FEMININO'} 
+                                <span className="opacity-50 mx-2">|</span> 
+                                {currentBracket.length > 0 ? `${DATA[activeKey].length} EQUIPES` : 'SEM EQUIPES'}
+                            </span>
+                        </div>
+
+                        {/* ÁREA DE JOGO */}
+                        {currentBracket.length === 0 ? (
+                            <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
+                                <p className="text-gray-400 font-medium">Nenhuma equipe encontrada para esta categoria.</p>
+                                <p className="text-xs text-gray-300 mt-2">Verifique se há alunos inscritos nas turmas correspondentes.</p>
+                            </div>
+                        ) : (
+                            <>
+                                {showRepechage && (
+                                    <div className="mb-8 max-w-xl mx-auto bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between shadow-sm animate-pulse">
+                                        <div>
+                                            <h4 className="text-orange-800 font-bold text-sm">Fase Inicial Concluída!</h4>
+                                            <p className="text-orange-600 text-xs mt-0.5">Calcule os melhores perdedores para preencher a chave.</p>
+                                        </div>
+                                        <button onClick={runRepechage} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg shadow flex items-center gap-2">
+                                            <IconCalculator /> Gerar Chave Final
+                                        </button>
+                                    </div>
+                                )}
+
+                                {championName && (
+                                    <div className="mb-10 max-w-xl mx-auto bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 p-6 rounded-2xl shadow-sm flex items-center justify-center gap-5">
+                                        <div className="p-3 bg-white rounded-full shadow-sm"><IconAward /></div>
+                                        <div>
+                                            <h3 className="font-bold text-yellow-800 uppercase tracking-widest text-[10px] mb-1">Grande Campeão</h3>
+                                            <p className="text-slate-800 text-lg font-black leading-tight">{championName}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-6 overflow-x-auto pb-8 px-2 custom-scrollbar items-start">
+                                    {roundOrder.map(round => (
+                                        matchesByRound[round] && matchesByRound[round].length > 0 && (
+                                            <BracketColumn 
+                                                key={round} title={round} matches={matchesByRound[round]} 
+                                                onUpdateScore={handleUpdateScore} onFinishMatch={handleFinishMatch}
+                                            />
+                                        )
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </main>
                 </div>
             );
         }
